@@ -59,7 +59,7 @@ jobs:
           7z a GKI-android14-6.1-kit.zip GKI-android14-6.1-kit/common
     
     - name: Upload Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: GKI-android14-6.1-kit
         path: GKI-android14-6.1-kit.zip
