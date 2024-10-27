@@ -21,9 +21,17 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
+    - name: Initial disk check
+      run: |
+          df -h
+          
+    - name: Maximize build disk space
+      uses: easimon/maximize-build-space@v10
+            
 
     - name: Setup build deps
       run: |
+          df -h
           sudo apt-get install build-essential make cmake repo -y\
           && sudo apt-get install p7zip-full p7zip-rar -y
           
