@@ -25,14 +25,21 @@ jobs:
       run: |
           df -h
           
-    - name: Maximize build disk space
-      uses: easimon/maximize-build-space@v10
+    - name: Maximize build space
+      uses: easimon/maximize-build-space@master
+      with:
+          root-reserve-mb: 8192
+          temp-reserve-mb: 2048
+          remove-dotnet: 'true'
+          remove-android: 'true'
+          remove-haskell: 'true'
+          remove-codeql: 'true'
             
 
     - name: Setup build deps
       run: |
           df -h
-          sudo apt-get install build-essential make cmake repo -y\
+          sudo apt-get install repo -y\
           && sudo apt-get install p7zip-full p7zip-rar -y
           
     - name: Checkout Repo
@@ -63,6 +70,8 @@ jobs:
         
     - name: Package GKI
       run: |
+          rm -rf /home/runner/.cache/bazel
+          df -h
           mv android-kernel GKI-android14-6.1-kit
           7z a GKI-android14-6.1-kit.zip GKI-android14-6.1-kit/common
     
