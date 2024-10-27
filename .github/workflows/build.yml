@@ -1,0 +1,65 @@
+name: build
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-${{ github.head_ref }}
+  cancel-in-progress: true
+  
+on: [push, pull_request]
+
+jobs:
+  build:
+    # Skip building pull requests from the same repository
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    env:
+      BUILD_TYPE: Release
+    steps:
+
+    - name: Setup build deps
+      run: |
+          sudo apt-get install build-essential make cmake repo -y\
+          && sudo apt-get install p7zip-full p7zip-rar -y
+          
+    - name: Checkout Repo
+      run: |
+        mkdir android-kernel && cd android-kernel
+        repo init --depth=1 --u https://android.googlesource.com/kernel/manifest -b common-android14-6.1 --repo-rev=v2.16
+        repo --trace sync -c -j$(nproc --all) --no-tags
+        cd ..
+          
+    - name: Build GKI
+      run: |
+        cd android-kernel
+        tools/bazel run --disk_cache=/home/runner/.cache/bazel --config=fast --config=stamp --lto=thin //common:kernel_aarch64_dist -- --dist_dir=dist
+        cd ..
+        
+    - name: Copy SDK
+      run: |
+        cd android-kernel
+        cp -r out/android14-6.1/common/arch/arm64/include/generated/asm common/include/
+        cp -r out/android14-6.1/common/arch/arm64/include/generated/uapi/asm common/include/
+        cp -r out/android14-6.1/common/arch/arm64/include/generated/uapi/asm common/include/uapi/
+        cp -r out/android14-6.1/common/include/generated common/include/
+        cp -r out/android14-6.1/common/include/config common/include/
+        cp out/android14-6.1/common/scripts/basic/fixdep common/scripts/basic/
+        cp out/android14-6.1/common/scripts/mod/modpost common/scripts/mod/
+        cp out/android14-6.1/common/scripts/module.lds common/scripts/
+        cp out/android14-6.1/common/Module.symvers common/
+        
+    - name: Package GKI
+      run: |
+          mv android-kernel GKI-android14-6.1-kit
+          7z a GKI-android14-6.1-kit.zip GKI-android14-6.1-kit/common
+    
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: GKI-android14-6.1-kit
+        path: GKI-android14-6.1-kit.zip
