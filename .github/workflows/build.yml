@@ -58,15 +58,18 @@ jobs:
     - name: Copy SDK
       run: |
         cd android-kernel
-        cp -r out/android14-6.1/common/arch/arm64/include/generated/asm common/include/
-        cp -r out/android14-6.1/common/arch/arm64/include/generated/uapi/asm common/include/
-        cp -r out/android14-6.1/common/arch/arm64/include/generated/uapi/asm common/include/uapi/
-        cp -r out/android14-6.1/common/include/generated common/include/
-        cp -r out/android14-6.1/common/include/config common/include/
-        cp out/android14-6.1/common/scripts/basic/fixdep common/scripts/basic/
-        cp out/android14-6.1/common/scripts/mod/modpost common/scripts/mod/
-        cp out/android14-6.1/common/scripts/module.lds common/scripts/
-        cp out/android14-6.1/common/Module.symvers common/
+        MODULE_LDS=$(find $GKI_ROOT -name module.lds | head -n 1)
+        export BUILT_ROOT=$(dirname $(dirname $(dirname $MODULE_LDS)))
+        echo "[+] Build root $BUILT_ROOT"
+        cp -r $BUILT_ROOT/common/arch/arm64/include/generated/asm common/include/
+        cp -r $BUILT_ROOT/common/arch/arm64/include/generated/uapi/asm common/include/
+        cp -r $BUILT_ROOT/common/arch/arm64/include/generated/uapi/asm common/include/uapi/
+        cp -r $BUILT_ROOT/common/include/generated common/include/
+        cp -r $BUILT_ROOT/common/include/config common/include/
+        cp $BUILT_ROOT/common/scripts/basic/fixdep common/scripts/basic/
+        cp $BUILT_ROOT/common/scripts/mod/modpost common/scripts/mod/
+        cp $BUILT_ROOT/common/scripts/module.lds common/scripts/
+        cp $BUILT_ROOT/common/Module.symvers common/
         
     - name: Package GKI
       run: |
